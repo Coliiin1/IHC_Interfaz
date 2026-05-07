@@ -7,7 +7,7 @@ import os
 import sqlite3
 
 # =========================
-# PALETA DE COLORES (Sistema de diseño UAEMex)
+# PALETA DE COLORES (Sistema de diseño UAEMex).
 # =========================
 C_BG        = "#F0F2F5"   # Fondo general gris muy claro
 C_CARD      = "#FFFFFF"   # Tarjeta blanca
