@@ -3,6 +3,12 @@ import tkinter as tk
 import os
 import sys
 import subprocess
+import threading
+from tkinter import messagebox
+try:
+    import speech_recognition as sr
+except ImportError:
+    sr = None
 
 # =========================
 # SISTEMA DE DISEÑO UAEMex
@@ -95,6 +101,61 @@ def mostrar_contenido(seccion):
         fg=C_MUTED,
         bg=C_BG
     ).place(relx=0.5, rely=0.45, anchor="center")
+
+
+# =========================
+# FUNCIONES DE VOZ
+# =========================
+def ejecutar_comando_voz(comando):
+    comando = comando.lower()
+    
+    if "inicio" in comando:
+        abrir_seccion("Inicio", botones_sidebar[0])
+    elif "trayectoria" in comando:
+        abrir_seccion("Trayectoria", botones_sidebar[1])
+    elif "inscripción" in comando or "reinscripción" in comando:
+        abrir_seccion("Inscripción y Reinscripción", botones_sidebar[2])
+    elif "pagos" in comando or "pago" in comando:
+        abrir_seccion("Pagos", botones_sidebar[3])
+    elif "servicio" in comando:
+        abrir_seccion("Servicio Social", botones_sidebar[4])
+    elif "herramienta" in comando:
+        abrir_seccion("Herramientas", botones_sidebar[5])
+    elif "directorio" in comando:
+        abrir_seccion("Directorio", botones_sidebar[6])
+    else:
+        messagebox.showinfo("Comando no reconocido", f"No entendí la sección a partir de: '{comando}'")
+
+def hilo_escuchar():
+    if sr is None:
+        ventana.after(0, lambda: messagebox.showerror("Error", "La librería speech_recognition no está instalada.\nInstálala con: pip install SpeechRecognition pyaudio"))
+        return
+
+    recognizer = sr.Recognizer()
+    try:
+        # Actualizar UI para mostrar que está escuchando
+        ventana.after(0, lambda: btn_mic.config(text="  Escuchando...", bg="#2E8B45"))
+        
+        with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source, timeout=5, phrase_time_limit=5)
+            
+        comando = recognizer.recognize_google(audio, language="es-ES")
+        # Ejecutar en el hilo principal de Tkinter
+        ventana.after(0, ejecutar_comando_voz, comando)
+        
+    except sr.UnknownValueError:
+        ventana.after(0, lambda: messagebox.showwarning("Micrófono", "No pude entender lo que dijiste."))
+    except sr.RequestError as e:
+        ventana.after(0, lambda: messagebox.showerror("Error de Servicio", f"No se pudo conectar a Google Speech: {e}"))
+    except Exception as e:
+        pass # Ignorar timeouts u otros errores menores
+    finally:
+        # Restaurar botón
+        ventana.after(0, lambda: btn_mic.config(text="  Usar Micrófono", bg=C_SIDEBAR))
+
+def iniciar_escucha():
+    threading.Thread(target=hilo_escuchar, daemon=True).start()
 
 
 # ---- Hover helpers para sidebar ----
@@ -261,7 +322,8 @@ try:
         relief="flat",
         anchor="w",
         padx=18,
-        cursor="hand2"
+        cursor="hand2",
+        command=iniciar_escucha
     )
     btn_mic.image = mic_img
 except Exception:
@@ -277,7 +339,8 @@ except Exception:
         relief="flat",
         anchor="w",
         padx=18,
-        cursor="hand2"
+        cursor="hand2",
+        command=iniciar_escucha
     )
 btn_mic.pack(fill=X, ipady=10)
 btn_mic.bind("<Enter>", lambda e: btn_mic.config(bg="#22703A"))
