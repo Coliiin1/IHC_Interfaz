@@ -107,8 +107,11 @@ def mostrar_contenido(seccion):
 # FUNCIONES DE VOZ
 # =========================
 def ejecutar_comando_voz(comando):
+    print(comando)
     comando = comando.lower()
+
     
+
     if "inicio" in comando:
         abrir_seccion("Inicio", botones_sidebar[0])
     elif "trayectoria" in comando:
@@ -145,11 +148,13 @@ def hilo_escuchar():
         ventana.after(0, ejecutar_comando_voz, comando)
         
     except sr.UnknownValueError:
+        print("No se entendió el audio (UnknownValueError)")
         ventana.after(0, lambda: messagebox.showwarning("Micrófono", "No pude entender lo que dijiste."))
     except sr.RequestError as e:
+        print(f"Error de conexión con Google: {e}")
         ventana.after(0, lambda: messagebox.showerror("Error de Servicio", f"No se pudo conectar a Google Speech: {e}"))
     except Exception as e:
-        pass # Ignorar timeouts u otros errores menores
+        print(f"Error inesperado al escuchar: {type(e).__name__} - {e}")
     finally:
         # Restaurar botón
         ventana.after(0, lambda: btn_mic.config(text="  Usar Micrófono", bg=C_SIDEBAR))

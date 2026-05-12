@@ -1,0 +1,19 @@
+# Entornos virtuales
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bases de datos (opcional: quitar el # si no quieres subir la base de datos a Git)
+# *.db
+# *.sqlite3
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
