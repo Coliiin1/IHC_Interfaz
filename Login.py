@@ -87,26 +87,23 @@ def login():
         conn = sqlite3.connect('control_escolar.db')
         cursor = conn.cursor()
         
-        # Consultar usuario, password y rol
-        cursor.execute('SELECT password, rol, nombre FROM usuarios WHERE num_cuenta = ?', (cuenta,))
-        resultado = cursor.fetchone()
+        # Validar según el rol (modo de la interfaz)
+        if es_admin:
+            cursor.execute('SELECT password, nombre FROM administradores WHERE usuario = ?', (cuenta,))
+            resultado = cursor.fetchone()
+        else:
+            cursor.execute('SELECT contraseña, nombre FROM estudiante WHERE numero_de_cuenta = ?', (cuenta,))
+            resultado = cursor.fetchone()
+            
         conn.close()
 
         if resultado and resultado[0] == clave:
-            password_db, rol, nombre = resultado
+            password_db, nombre = resultado
             
-            # Validar que el rol coincida con el modo de la interfaz
-            if es_admin and rol != 'Admin':
-                messagebox.showerror("Acceso Denegado", "Esta cuenta no tiene privilegios de administrador.\nPor favor usa el portal de estudiantes.")
-                return
-            if not es_admin and rol == 'Admin':
-                messagebox.showerror("Acceso Denegado", "Estás intentando entrar como administrador desde el portal de estudiantes.\nUsa el acceso administrativo.")
-                return
-
             ventana.destroy()
             
             # Definir qué script abrir según el rol
-            if rol == 'Admin':
+            if es_admin:
                 script = "AdminPrincipal.py"
             else:
                 script = "MenPrincipal.py"

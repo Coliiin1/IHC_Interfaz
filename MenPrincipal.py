@@ -1,9 +1,11 @@
 from tkinter import *
 import tkinter as tk
+from tkinter import ttk
 import os
 import sys
 import subprocess
 import threading
+import sqlite3
 from tkinter import messagebox
 try:
     import speech_recognition as sr
@@ -81,26 +83,87 @@ def mostrar_contenido(seccion):
         bg=C_CARD
     ).pack(anchor="w")
 
-    Label(
-        header,
-        text=f"Sección: {seccion}",
-        font=(FONT_FAMILY, 10),
-        fg=C_MUTED,
-        bg=C_CARD
-    ).pack(anchor="w")
-
     Frame(area_contenido, bg=C_BORDER, height=1).pack(fill=X)
 
-    # Placeholder de contenido
-    ph = Frame(area_contenido, bg=C_BG)
+    # Contenedor dinámico
+    ph = Frame(area_contenido, bg=C_BG, padx=30, pady=20)
     ph.pack(expand=True, fill=BOTH)
-    Label(
-        ph,
-        text=f"📋  {seccion}",
-        font=(FONT_FAMILY, 15),
-        fg=C_MUTED,
-        bg=C_BG
-    ).place(relx=0.5, rely=0.45, anchor="center")
+
+    # --- LÓGICA DE BASE DE DATOS ---
+    try:
+        conn = sqlite3.connect('control_escolar.db')
+        cursor = conn.cursor()
+
+        if seccion == "Inicio":
+            cursor.execute("SELECT carrera, promedio_general FROM estudiante WHERE numero_de_cuenta = ?", (usuario_cuenta,))
+            resultado = cursor.fetchone()
+            
+            carrera = resultado[0] if resultado and resultado[0] else "No asignada"
+            promedio = resultado[1] if resultado and resultado[1] else 0.0
+            
+            # Tarjeta de Info Estudiante
+            card = Frame(ph, bg=C_CARD, padx=20, pady=20, highlightbackground=C_BORDER, highlightthickness=1)
+            card.pack(fill=X, pady=10)
+            
+            Label(card, text=f"Bienvenido, {usuario_nombre}", font=(FONT_FAMILY, 16, "bold"), bg=C_CARD, fg=C_SIDEBAR).pack(anchor="w")
+            Label(card, text=f"Número de Cuenta: {usuario_cuenta}", font=(FONT_FAMILY, 12), bg=C_CARD, fg=C_TEXT).pack(anchor="w", pady=(10, 0))
+            Label(card, text=f"Carrera: {carrera}", font=(FONT_FAMILY, 12), bg=C_CARD, fg=C_TEXT).pack(anchor="w", pady=2)
+            Label(card, text=f"Promedio General: {promedio}", font=(FONT_FAMILY, 14, "bold"), bg=C_CARD, fg="#2E8B45").pack(anchor="w", pady=(10, 0))
+
+        elif seccion == "Trayectoria":
+            Label(ph, text="Materias Cursadas y Calificaciones", font=(FONT_FAMILY, 14, "bold"), bg=C_BG, fg=C_TEXT).pack(anchor="w", pady=(0, 10))
+            
+            # Estilos de tabla
+            style = ttk.Style()
+            style.theme_use("default")
+            style.configure("Treeview.Heading", font=(FONT_FAMILY, 10, "bold"), background=C_SIDEBAR, foreground=C_WHITE)
+            style.configure("Treeview", font=(FONT_FAMILY, 11), rowheight=30)
+            
+            # Crear tabla (Treeview)
+            columnas = ("clave", "asignatura", "calificacion")
+            tabla = ttk.Treeview(ph, columns=columnas, show="headings", height=10)
+            tabla.heading("clave", text="Clave")
+            tabla.heading("asignatura", text="Asignatura")
+            tabla.heading("calificacion", text="Calificación")
+            
+            tabla.column("clave", width=100, anchor=CENTER)
+            tabla.column("asignatura", width=300, anchor=W)
+            tabla.column("calificacion", width=100, anchor=CENTER)
+            
+            cursor.execute('''
+                SELECT m.clave_materia, m.asignatura, c.calificacion 
+                FROM calificaciones c 
+                JOIN materia m ON c.clave_materia = m.clave_materia 
+                WHERE c.numero_de_cuenta = ?
+            ''', (usuario_cuenta,))
+            materias = cursor.fetchall()
+            
+            for m in materias:
+                tabla.insert("", "end", values=(m[0], m[1], m[2]))
+                
+            tabla.pack(fill=BOTH, expand=True)
+
+        elif seccion == "Inscripción y Reinscripción":
+            Label(ph, text="Grupos Inscritos", font=(FONT_FAMILY, 14, "bold"), bg=C_BG, fg=C_TEXT).pack(anchor="w", pady=(0, 10))
+            
+            cursor.execute('''
+                SELECT grupo FROM estudiante_grupo WHERE numero_de_cuenta = ?
+            ''', (usuario_cuenta,))
+            grupos = cursor.fetchall()
+            
+            if not grupos:
+                Label(ph, text="No estás inscrito en ningún grupo actualmente.", font=(FONT_FAMILY, 12), bg=C_BG, fg=C_MUTED).pack(anchor="w")
+            else:
+                for g in grupos:
+                    lbl_grupo = Label(ph, text=f"📚 Grupo: {g[0]}", font=(FONT_FAMILY, 12), bg=C_CARD, fg=C_SIDEBAR, padx=15, pady=10, highlightbackground=C_BORDER, highlightthickness=1)
+                    lbl_grupo.pack(fill=X, pady=5)
+        else:
+            # Placeholder genérico
+            Label(ph, text=f"📋  {seccion}", font=(FONT_FAMILY, 15), fg=C_MUTED, bg=C_BG).place(relx=0.5, rely=0.45, anchor="center")
+            
+        conn.close()
+    except sqlite3.Error as e:
+        Label(ph, text=f"Error de base de datos: {e}", fg="red", bg=C_BG).pack()
 
 
 # =========================
@@ -393,7 +456,7 @@ footer = Frame(ventana, bg=C_TOPBAR,
 footer.pack(side=BOTTOM, fill=X)
 Label(
     footer,
-    text="Universidad Autónoma del Estado de México  •  Sistema de Control Escolar  •  © 2025",
+    text="Universidad Autónoma del Estado de México  •  Sistema de Control Escolar  •  © 2026",
     font=(FONT_FAMILY, 9),
     fg=C_MUTED,
     bg=C_TOPBAR
