@@ -1,0 +1,31 @@
+=========================================================
+ INSTRUCCIONES PARA LA INSTALACIÓN DEL ENTORNO VIRTUAL
+=========================================================
+
+Para poder ejecutar el proyecto y todas sus dependencias correctamente, sigue estos pasos desde la terminal de Windows (PowerShell o CMD):
+
+
+1. Crear el entorno virtual (esto solo se hace la primera vez):
+   python -m venv venv
+
+2. Activar el entorno virtual:
+   - En Windows (PowerShell):
+     .\venv\Scripts\Activate.ps1
+   
+   - En Windows (CMD):
+     .\venv\Scripts\activate.bat
+
+   Nota: Si usas PowerShell y te da un error diciendo que los scripts están deshabilitados, ejecuta este comando primero (solo una vez):
+   Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+
+3. Instalar las dependencias del proyecto:
+   Asegúrate de que tu terminal muestre "(venv)" al inicio, lo que indica que el entorno está activo. Luego ejecuta:
+   pip install -r requirements.txt
+
+4. ¡Listo! Ahora puedes ejecutar los archivos principales del proyecto sin problemas, por ejemplo:
+   python Login.py
+   python MenPrincipal.py
+   python AdminPrincipal.py
+
+=========================================================
+IMPORTANTE: Cada vez que cierres la terminal y vuelvas a abrir el proyecto en el futuro, recuerda ejecutar SIEMPRE el PASO 3 para volver a activar el entorno virtual antes de correr el código.

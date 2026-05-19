@@ -36,7 +36,9 @@ def init_db():
     # 3. Tabla Grupo
     cursor.execute('''
         CREATE TABLE grupo (
-            grupo TEXT PRIMARY KEY
+            grupo TEXT PRIMARY KEY,
+            carrera TEXT,
+            FOREIGN KEY(carrera) REFERENCES carrera(nombre) ON DELETE CASCADE
         )
     ''')
 
@@ -97,8 +99,8 @@ def init_db():
     cursor.execute("INSERT INTO carrera VALUES ('Ingeniería en Software')")
     
     # Grupos
-    cursor.execute("INSERT INTO grupo VALUES ('ICO-01')")
-    cursor.execute("INSERT INTO grupo VALUES ('ISO-02')")
+    cursor.execute("INSERT INTO grupo VALUES ('ICO-01', 'Ingeniería en Computación')")
+    cursor.execute("INSERT INTO grupo VALUES ('ISO-02', 'Ingeniería en Software')")
     
     # Materias
     cursor.executemany("INSERT INTO materia VALUES (?, ?, ?)", [
